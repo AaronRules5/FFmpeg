@@ -86,6 +86,8 @@ typedef struct EaDemuxContext {
     enum AVCodecID audio_codec;
     int audio_stream_index;
 
+    int framerate;
+
     int bytes;
     int sample_rate;
     int num_channels;
@@ -197,6 +199,10 @@ static int process_audio_header_elements(AVFormatContext *s)
         case 0xFF:
             av_log(s, AV_LOG_DEBUG, "end of header block reached\n");
             in_header = 0;
+            break;
+        case 0x1B:
+            ea->framerate = read_arbitrary(pb);
+            av_log(s, AV_LOG_DEBUG, "Setting framerate to %u", ea->framerate);
             break;
         default:
             av_log(s, AV_LOG_DEBUG,
@@ -367,6 +373,8 @@ static int process_ea_header(AVFormatContext *s)
     AVIOContext *pb    = s->pb;
     int i;
 
+    ea->framerate = 15;
+
     for (i = 0; i < 5 && (!ea->audio_codec || !ea->video.codec); i++) {
         uint64_t startpos     = avio_tell(pb);
         int err               = 0;
@@ -427,12 +435,12 @@ static int process_ea_header(AVFormatContext *s)
         case pQGT_TAG:
         case TGQs_TAG:
             ea->video.codec = AV_CODEC_ID_TGQ;
-            ea->video.time_base   = (AVRational) { 1, 15 };
+            ea->video.time_base   = (AVRational) { 1, ea->framerate };
             break;
 
         case pIQT_TAG:
             ea->video.codec = AV_CODEC_ID_TQI;
-            ea->video.time_base   = (AVRational) { 1, 15 };
+            ea->video.time_base   = (AVRational) { 1, ea->framerate };
             break;
 
         case MADk_TAG:
