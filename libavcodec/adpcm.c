@@ -1689,19 +1689,15 @@ static int adpcm_decode_frame(AVCodecContext *avctx, AVFrame *frame,
                 next_left_sample = (next_left_sample +
                     (current_left_sample * coeff1l) +
                     (previous_left_sample * coeff2l) + 0x80) >> 8;
-
                 next_right_sample = (next_right_sample +
                     (current_right_sample * coeff1r) +
                     (previous_right_sample * coeff2r) + 0x80) >> 8;
 
                 previous_left_sample = current_left_sample;
                 current_left_sample = av_clip_int16(next_left_sample);
-
                 previous_right_sample = current_right_sample;
                 current_right_sample = av_clip_int16(next_right_sample);
-
                 *samples++ = current_left_sample;
-
                 if (channels == 2){
                     *samples++ = current_right_sample;
                 } else {
