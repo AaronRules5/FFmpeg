@@ -1684,7 +1684,7 @@ static int adpcm_decode_frame(AVCodecContext *avctx, AVFrame *frame,
             for (int count2 = 0; count2 < (channels == 2 ? 28 : 14); count2++) {
                 byte = bytestream2_get_byteu(&gb);
                 next_left_sample  = sign_extend(byte >> 4, 4) * (1 << shift_left);
-                next_right_sample = sign_extend(byte, 4) * (1 << shift_right);
+                next_right_sample = sign_extend(byte,      4) * (1 << shift_right);
 
                 next_left_sample = (next_left_sample +
                     (current_left_sample * coeff1l) +
