@@ -86,8 +86,6 @@ typedef struct EaDemuxContext {
     enum AVCodecID audio_codec;
     int audio_stream_index;
 
-    int framerate;
-
     int bytes;
     int sample_rate;
     int num_channels;
@@ -201,8 +199,8 @@ static int process_audio_header_elements(AVFormatContext *s)
             in_header = 0;
             break;
         case 0x1B:
-            ea->framerate = read_arbitrary(pb);
-            av_log(s, AV_LOG_DEBUG, "Setting framerate to %u", ea->framerate);
+            ea->video.time_base = (AVRational) {1, read_arbitrary(pb)};
+            av_log(s, AV_LOG_DEBUG, "Setting framerate to %u\n", ea->video.time_base.den);
             break;
         default:
             av_log(s, AV_LOG_DEBUG,
@@ -331,7 +329,8 @@ static void process_video_header_mdec(AVFormatContext *s, VideoProperties *video
     avio_skip(pb, 4);
     video->width       = avio_rl16(pb);
     video->height      = avio_rl16(pb);
-    video->time_base   = (AVRational) { 1, 15 };
+    if (!video->time_base.num)
+        video->time_base   = (AVRational) { 1, 15 };
     video->codec = AV_CODEC_ID_MDEC;
 }
 
@@ -372,8 +371,6 @@ static int process_ea_header(AVFormatContext *s)
     EaDemuxContext *ea = s->priv_data;
     AVIOContext *pb    = s->pb;
     int i;
-
-    ea->framerate = 15;
 
     for (i = 0; i < 5 && (!ea->audio_codec || !ea->video.codec); i++) {
         uint64_t startpos     = avio_tell(pb);
@@ -435,12 +432,14 @@ static int process_ea_header(AVFormatContext *s)
         case pQGT_TAG:
         case TGQs_TAG:
             ea->video.codec = AV_CODEC_ID_TGQ;
-            ea->video.time_base   = (AVRational) { 1, ea->framerate };
+            if (!ea->video.time_base.num)
+                ea->video.time_base   = (AVRational) { 1, 15 };
             break;
 
         case pIQT_TAG:
             ea->video.codec = AV_CODEC_ID_TQI;
-            ea->video.time_base   = (AVRational) { 1, ea->framerate };
+            if (!ea->video.time_base.num)
+                ea->video.time_base   = (AVRational) { 1, 15 };
             break;
 
         case MADk_TAG:
