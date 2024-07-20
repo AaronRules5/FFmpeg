@@ -1656,7 +1656,7 @@ static int adpcm_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
         /* Each EA ADPCM frame has a 12-byte header followed by 30-byte (stereo) or 15-byte (mono) pieces,
            each coding 28 stereo/mono samples. */
-        
+
         if (channels != 2 && channels != 1)
             return AVERROR_INVALIDDATA;
 
@@ -1667,8 +1667,8 @@ static int adpcm_decode_frame(AVCodecContext *avctx, AVFrame *frame,
 
         for (int count1 = 0; count1 < nb_samples / 28; count1++) {
             int byte = bytestream2_get_byteu(&gb);
-            coeff1l = ea_adpcm_table[ byte >> 4 ];
-            coeff2l = ea_adpcm_table[(byte >> 4) + 4];
+            coeff1l = ea_adpcm_table[ byte >> 4       ];
+            coeff2l = ea_adpcm_table[(byte >> 4  ) + 4];
             coeff1r = ea_adpcm_table[ byte & 0x0F];
             coeff2r = ea_adpcm_table[(byte & 0x0F) + 4];
 
@@ -1680,7 +1680,7 @@ static int adpcm_decode_frame(AVCodecContext *avctx, AVFrame *frame,
                 /* Mono packs the shift into the coefficient byte's lower nibble instead */
                 shift_left = 20 - (byte & 0x0F);
             }
-            
+
             for (int count2 = 0; count2 < (channels == 2 ? 28 : 14); count2++) {
                 byte = bytestream2_get_byteu(&gb);
                 next_left_sample  = sign_extend(byte >> 4, 4) * (1 << shift_left);
